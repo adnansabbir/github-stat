@@ -1,0 +1,38 @@
+name: Fetch GitHub stats
+
+on:
+  schedule:
+    # Every Sunday at 00:00 UTC
+    - cron: "0 0 * * 0"
+  # Allows running it by hand from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Fetch stats
+        env:
+          GH_STATS_TOKEN: ${{ secrets.GH_STATS_TOKEN }}
+          # Repository variable; unset means public repos only
+          INCLUDE_PRIVATE_REPO: ${{ vars.INCLUDE_PRIVATE_REPO || 'false' }}
+        run: |
+          mkdir -p site
+          python -m github_stats > site/stats.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stats
+          path: site/stats.json
