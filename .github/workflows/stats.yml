@@ -18,10 +18,18 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Lets configure-pages read the site's address from the Pages settings
+      pages: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      # Gives the real site URL, including a custom domain if the fork has one
+      - id: pages
+        uses: actions/configure-pages@v6
+
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -38,7 +46,22 @@ jobs:
           cp -r web/. site/
           python -m github_stats > site/stats.json
 
-      - uses: actions/upload-pages-artifact@v3
+      # LinkedIn / Facebook previews don't run JavaScript: render the card to card.png and
+      # write og: tags with absolute URLs into index.html.
+      # If the tools fail to install or run, og.py still writes text-only tags and exits 0, so the
+      # fresh stats.json deploys anyway; only a broken card (profile or avatar) fails this step.
+      - name: Render social preview
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          pip install -r requirements-og.txt || echo "::warning::Could not install Playwright"
+          # --with-deps also installs the CJK, Thai and Indic fonts the runner lacks; without
+          # them, names and bios in those scripts render as empty boxes
+          python -m playwright install --with-deps --only-shell chromium \
+            || echo "::warning::Could not install the preview browser"
+          python -m github_stats.og site
+
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -65,4 +88,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

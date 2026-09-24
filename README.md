@@ -59,15 +59,26 @@ GitHub disables workflows in forks until you allow them:
 1. Open the **Actions** tab and click **I understand my workflows, go ahead and enable them**.
 2. Select **Fetch GitHub stats** → **Run workflow**.
 
-After about a minute, your stats are live at:
+After a few minutes (the first run also installs the browser that renders the preview image), your
+stats are live at:
 
 | What              | URL                                                        |
 |-------------------|------------------------------------------------------------|
 | Shareable card    | `https://<your-username>.github.io/github-stat/`           |
 | JSON endpoint     | `https://<your-username>.github.io/github-stat/stats.json` |
+| Preview image     | `https://<your-username>.github.io/github-stat/card.png`   |
 
 They refresh automatically every Sunday at 00:00 UTC. You can also refresh them any time with
 **Run workflow**. Nothing is committed to your repo: each run publishes a fresh copy of the site.
+
+Sharing the card link on LinkedIn, Facebook or X shows `card.png` as the preview. These sites keep
+their own copy of a preview (LinkedIn and X for about a week, Facebook for up to 30 days), so a
+shared link can show older stats. To refresh it right away, paste the link into LinkedIn's
+[Post Inspector](https://www.linkedin.com/post-inspector/) or Facebook's
+[Sharing Debugger](https://developers.facebook.com/tools/debug/) (click **Scrape Again**).
+
+If a week's preview image can't be rendered, the stats and card are still published, with a
+text-only preview; the run shows a warning.
 
 If you rename your fork, replace `github-stat` in the URLs with the new name.
 
@@ -122,6 +133,20 @@ python -m http.server -d site 8000         # open http://localhost:8000
 ```
 
 After editing `web/`, run `cp -r web/. site/` again and refresh.
+
+To also render the preview image and meta tags (`site/card.png`):
+
+```sh
+pip install -r requirements-og.txt                   # once
+python -m playwright install --only-shell chromium   # once
+SITE_URL=http://localhost:8000 python -m github_stats.og site
+```
+
+Run it on a fresh copy of `web/` each time; it tells you if the copy was already processed. On WSL
+or a minimal Debian/Ubuntu install, if Chromium fails with `error while loading shared libraries`,
+run `python -m playwright install --with-deps --only-shell chromium` instead (needs sudo).
+
+Open `http://localhost:8000/?og` to see the 1200×630 layout used for the image.
 
 The card lives in `web/` (`index.html`, `style.css`, `app.js`); `site/` is build output and is
 not committed.

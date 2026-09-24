@@ -26,6 +26,9 @@
 
 * { box-sizing: border-box; }
 
+/* Sections hidden by app.js when their data is missing; beats display rules like .panel-years */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   min-height: 100%;
@@ -112,6 +115,16 @@ a:hover { text-decoration: underline; }
   background: var(--glass-surface);
 }
 
+/* Shown by app.js in place of an avatar that failed to load */
+.avatar-initials {
+  display: grid;
+  place-items: center;
+  color: var(--card-text);
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #4f8cff 0%, #2f6bd8 100%);
+}
+
 .identity { min-width: 0; }
 
 .identity h1 {
@@ -159,15 +172,19 @@ a:hover { text-decoration: underline; }
 
 /* Totals */
 
+/* Flex rather than a 4-column grid, so the tiles that render share the width when others are hidden */
 .tiles {
+  --tile-gap: 12px;
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tile-gap);
 }
 
 .tile {
+  flex: 1 1 0;
+  min-width: 0;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
   border: 1px solid var(--glass-border);
   border-radius: 20px;
@@ -374,61 +391,122 @@ a:hover { text-decoration: underline; }
 
 .error { color: var(--danger); }
 
-/* Responsive */
+/* Responsive (the ?og layout keeps its fixed 1200x630 design in any window) */
 
 @media (max-width: 760px) {
-  .card {
+  body:not(.og) .card {
     padding: 20px;
     border-radius: 24px;
   }
 
-  .card::after { border-radius: 23px; }
+  body:not(.og) .card::after { border-radius: 23px; }
 
-  .card-header { align-items: flex-start; }
+  body:not(.og) .card-header { align-items: flex-start; }
 
-  .avatar {
+  body:not(.og) .avatar {
     width: 74px;
     height: 74px;
   }
 
-  .identity h1 { font-size: 28px; }
+  body:not(.og) .identity h1 { font-size: 28px; }
 
-  .bio { font-size: 15px; }
+  body:not(.og) .bio { font-size: 15px; }
 
-  .tiles { grid-template-columns: repeat(2, 1fr); }
+  /* Two per row */
+  body:not(.og) .tile { flex-basis: calc(50% - var(--tile-gap) / 2); }
 
-  .tile-value { font-size: 28px; }
+  body:not(.og) .tile-value { font-size: 28px; }
 }
 
 @media (max-width: 640px) {
-  main { padding: 20px 14px 40px; }
+  body:not(.og) main { padding: 20px 14px 40px; }
 
-  .card-header {
+  body:not(.og) .card-header {
     flex-direction: column;
     gap: 14px;
   }
 
-  .lang-legend {
+  body:not(.og) .lang-legend {
     gap: 8px 14px;
     font-size: 13px;
   }
 
-  .year-count { display: none; }
+  body:not(.og) .year-count { display: none; }
 
-  .year-label { font-size: 10px; }
+  body:not(.og) .year-label { font-size: 10px; }
 
   /* Too narrow for "'26 YTD"; the bar colour still marks the current year */
-  .ytd { display: none; }
+  body:not(.og) .ytd { display: none; }
 
-  .years {
+  body:not(.og) .years {
     gap: 5px;
     height: 130px;
   }
 
-  .actions { gap: 8px; }
+  body:not(.og) .actions { gap: 8px; }
 
-  .button {
+  body:not(.og) .button {
     width: 100%;
     text-align: center;
   }
 }
+
+/* Social preview (?og): the card alone, filling a 1200x630 image */
+
+/* Sized here only; opened in a smaller window the page scrolls instead of cutting the card off */
+body.og {
+  width: 1200px;
+  height: 630px;
+  min-height: 0;
+}
+
+body.og main {
+  max-width: none;
+  height: 100%;
+  padding: 24px;
+}
+
+body.og .actions,
+body.og .credit { display: none; }
+
+body.og .card {
+  height: 100%;
+  padding: 26px 30px 22px;
+  gap: 18px;
+  grid-template-columns: 1fr 1.25fr;
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    "header header"
+    "tiles tiles"
+    "languages years"
+    "footer footer";
+}
+
+body.og .card-header { grid-area: header; }
+body.og .tiles { grid-area: tiles; }
+body.og .panel-languages { grid-area: languages; }
+body.og .card-footer { grid-area: footer; }
+
+body.og .panel-years {
+  grid-area: years;
+  display: flex;
+  flex-direction: column;
+}
+
+body.og .years {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+body.og .identity h1 { font-size: 32px; }
+body.og .bio { -webkit-line-clamp: 1; }
+body.og .tile { padding: 14px 18px 12px; }
+body.og .tile-value { font-size: 30px; }
+
+/* If one panel is hidden, the other takes the full width instead of leaving a hole */
+body.og .card:has(#panel-languages[hidden]) .panel-years,
+body.og .card:has(#panel-years[hidden]) .panel-languages { grid-column: 1 / -1; }
+
+/* Many years leave each column too narrow for counts and "YTD"; the bar colour still marks it */
+body.og .years:has(.year:nth-child(18)) :is(.ytd, .year-count) { display: none; }
