@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GitHub Stats</title>
+  <meta name="description" content="GitHub profile stats: repos, stars, languages and yearly contributions.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="GitHub Stats">
+  <meta property="og:description" content="GitHub profile stats: repos, stars, languages and yearly contributions.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <article class="card" id="card" aria-busy="true">
+      <header class="card-header">
+        <img class="avatar" id="avatar" alt="" width="96" height="96">
+        <div class="identity">
+          <h1 id="name">Loading…</h1>
+          <a id="login" class="login" href="#"></a>
+          <p id="bio" class="bio"></p>
+          <ul id="meta" class="meta"></ul>
+        </div>
+      </header>
+
+      <section class="tiles" aria-label="Totals">
+        <div class="tile">
+          <span class="tile-value" id="stat-contributions">–</span>
+          <span class="tile-label" id="stat-contributions-label">Contributions</span>
+        </div>
+        <div class="tile">
+          <span class="tile-value" id="stat-repos">–</span>
+          <span class="tile-label" id="stat-repos-label">Repos</span>
+        </div>
+        <div class="tile">
+          <span class="tile-value" id="stat-stars">–</span>
+          <span class="tile-label">Stars Received</span>
+        </div>
+        <div class="tile">
+          <span class="tile-value" id="stat-followers">–</span>
+          <span class="tile-label">Followers</span>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="languages-title">
+        <h2 id="languages-title">Top languages</h2>
+        <div class="lang-bar" id="lang-bar"></div>
+        <ul class="lang-legend" id="lang-legend"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="years-title">
+        <h2 id="years-title">Contribution history</h2>
+        <div class="years" id="years"></div>
+      </section>
+
+      <footer class="card-footer">
+        <span id="updated"></span>
+      </footer>
+    </article>
+
+    <nav class="actions" aria-label="Share">
+      <a class="button" id="share-linkedin" target="_blank" rel="noopener">Share on LinkedIn</a>
+      <a class="button" id="share-facebook" target="_blank" rel="noopener">Share on Facebook</a>
+      <button class="button" id="copy-link" type="button">Copy link</button>
+      <a class="button button-quiet" href="stats.json">stats.json</a>
+    </nav>
+
+    <p class="credit">
+      Made with <a href="https://github.com/adnansabbir/github-stat">github-stat</a>. Fork it to get your own card.
+    </p>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

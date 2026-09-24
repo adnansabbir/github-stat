@@ -10,8 +10,13 @@ on:
 permissions:
   contents: read
 
+# Never run two deployments at once; let an in-progress one finish
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
-  stats:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,16 +28,41 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Fetch stats
+      - name: Build site
         env:
           GH_STATS_TOKEN: ${{ secrets.GH_STATS_TOKEN }}
           # Repository variable; unset means public repos only
           INCLUDE_PRIVATE_REPO: ${{ vars.INCLUDE_PRIVATE_REPO || 'false' }}
         run: |
           mkdir -p site
+          cp -r web/. site/
           python -m github_stats > site/stats.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-pages-artifact@v3
         with:
-          name: stats
-          path: site/stats.json
+          path: site
+
+  # GitHub disables scheduled workflows in public repos after 60 days without commits, and this
+  # workflow never commits. Re-enabling it on every run keeps the weekly schedule alive.
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/stats.yml/enable"
+
+  # Publishes the site without committing anything to the repo
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

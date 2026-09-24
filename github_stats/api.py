@@ -1,16 +1,20 @@
+import time
 from collections import Counter
+from datetime import datetime, timezone
 
 import requests
 
 GRAPHQL_URL = "https://api.github.com/graphql"
 TIMEOUT = 30
+# GitHub GraphQL occasionally answers heavy queries with a 502; retry those a few times
+RETRY_DELAYS = (2, 5, 10)
 
 REPO_FIELDS = """
   pageInfo { hasNextPage endCursor }
   nodes {
     isFork
     stargazerCount
-    languages(first: 20, orderBy: {field: SIZE, direction: DESC}) {
+    languages(first: 100, orderBy: {field: SIZE, direction: DESC}) {
       edges { size node { name color } }
     }
   }
@@ -61,13 +65,25 @@ PROFILE_FIELDS = (
 )
 
 
+def _post(token, query, variables):
+    for delay in (*RETRY_DELAYS, None):
+        try:
+            response = requests.post(
+                GRAPHQL_URL,
+                headers={"Authorization": f"Bearer {token}"},
+                json={"query": query, "variables": variables or {}},
+                timeout=TIMEOUT,
+            )
+            if response.status_code < 500 or delay is None:
+                return response
+        except (requests.ConnectionError, requests.Timeout):
+            if delay is None:
+                raise
+        time.sleep(delay)
+
+
 def _graphql(token, query, variables=None):
-    response = requests.post(
-        GRAPHQL_URL,
-        headers={"Authorization": f"Bearer {token}"},
-        json={"query": query, "variables": variables or {}},
-        timeout=TIMEOUT,
-    )
+    response = _post(token, query, variables)
     response.raise_for_status()
     payload = response.json()
     # GraphQL reports query errors with a 200 status, in an "errors" key
@@ -158,6 +174,8 @@ def fetch_profile_stats(token, include_private=False):
     viewer = _graphql(token, PROFILE_QUERY, {"privacy": privacy})["viewer"]
     repos = _all_repos(token, viewer["repositories"], privacy)
     return {
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "include_private": include_private,
         "profile": {field: viewer[field] for field in PROFILE_FIELDS},
         "followers": {
             "followers": viewer["followers"]["totalCount"],

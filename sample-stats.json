@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-09-20T00:00:00+00:00",
+  "include_private": false,
+  "profile": {
+    "name": "Sample User",
+    "email": "",
+    "bio": "Placeholder profile used to preview the card without a GitHub token.",
+    "company": "Example Inc.",
+    "location": "Somewhere on Earth",
+    "websiteUrl": "https://example.com",
+    "twitterUsername": null,
+    "avatarUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDk2IDk2Ij48cmVjdCB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIGZpbGw9IiMxZjZmZWIiLz48dGV4dCB4PSI0OCIgeT0iNjAiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjM2IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TVTwvdGV4dD48L3N2Zz4=",
+    "url": "https://github.com/sample-user",
+    "isHireable": false,
+    "createdAt": "2018-03-14T09:00:00Z",
+    "updatedAt": "2026-09-19T18:30:00Z"
+  },
+  "followers": {
+    "followers": 1280,
+    "following": 42
+  },
+  "repos": {
+    "total": 57,
+    "sources": 49,
+    "forks": 8
+  },
+  "stars": 3450,
+  "languages": [
+    {
+      "name": "TypeScript",
+      "color": "#3178c6",
+      "bytes": 5200000,
+      "percent": 46.21
+    },
+    {
+      "name": "Python",
+      "color": "#3572A5",
+      "bytes": 3100000,
+      "percent": 27.55
+    },
+    {
+      "name": "Go",
+      "color": "#00ADD8",
+      "bytes": 1400000,
+      "percent": 12.44
+    },
+    {
+      "name": "JavaScript",
+      "color": "#f1e05a",
+      "bytes": 900000,
+      "percent": 8.0
+    },
+    {
+      "name": "CSS",
+      "color": "#663399",
+      "bytes": 420000,
+      "percent": 3.73
+    },
+    {
+      "name": "Shell",
+      "color": "#89e051",
+      "bytes": 180000,
+      "percent": 1.6
+    },
+    {
+      "name": "Dockerfile",
+      "color": "#384d54",
+      "bytes": 40000,
+      "percent": 0.36
+    },
+    {
+      "name": "Makefile",
+      "color": "#427819",
+      "bytes": 12000,
+      "percent": 0.11
+    }
+  ],
+  "yearly_contributions": {
+    "2026": 1420,
+    "2025": 1985,
+    "2024": 1610,
+    "2023": 1204,
+    "2022": 870,
+    "2021": 512,
+    "2020": 305,
+    "2019": 188,
+    "2018": 64
+  }
+}

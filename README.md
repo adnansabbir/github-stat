@@ -45,7 +45,8 @@ the same page open the **Variables** tab → **New repository variable**:
 - **Name:** `INCLUDE_PRIVATE_REPO`
 - **Value:** `true`
 
-Private repos only add to the totals. Their names are never published.
+Private repos only add to the totals, which are published on your public page and `stats.json`.
+Their names are never published.
 
 ### 5. Turn on GitHub Pages
 
@@ -60,17 +61,22 @@ GitHub disables workflows in forks until you allow them:
 
 After about a minute, your stats are live at:
 
-```
-https://<your-username>.github.io/github-stat/stats.json
-```
+| What              | URL                                                        |
+|-------------------|------------------------------------------------------------|
+| Shareable card    | `https://<your-username>.github.io/github-stat/`           |
+| JSON endpoint     | `https://<your-username>.github.io/github-stat/stats.json` |
 
 They refresh automatically every Sunday at 00:00 UTC. You can also refresh them any time with
-**Run workflow**.
+**Run workflow**. Nothing is committed to your repo: each run publishes a fresh copy of the site.
+
+If you rename your fork, replace `github-stat` in the URLs with the new name.
 
 ## What's in the JSON
 
 | Section                | What it contains                                                   |
 |------------------------|--------------------------------------------------------------------|
+| `generated_at`         | When the stats were fetched (UTC, ISO 8601)                        |
+| `include_private`      | Whether private repos and contributions were counted               |
 | `profile`              | Name, bio, company, location, avatar, profile URL, join date, …    |
 | `followers`            | Follower and following counts                                      |
 | `repos`                | Owned repos: total, sources and forks                              |
@@ -105,3 +111,17 @@ pip install -r requirements.txt
 cp .env.example .env   # then fill in GH_STATS_TOKEN
 python -m github_stats # prints the stats as JSON
 ```
+
+To preview the card, build the site the same way the workflow does and serve it:
+
+```sh
+mkdir -p site && cp -r web/. site/
+python -m github_stats > site/stats.json   # your real stats (needs GH_STATS_TOKEN)
+# or: cp sample-stats.json site/stats.json # made-up data, no token needed
+python -m http.server -d site 8000         # open http://localhost:8000
+```
+
+After editing `web/`, run `cp -r web/. site/` again and refresh.
+
+The card lives in `web/` (`index.html`, `style.css`, `app.js`); `site/` is build output and is
+not committed.
