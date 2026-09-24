@@ -7,8 +7,7 @@ from github_stats.api import fetch_profile_stats
 
 
 def main():
-    # Locally these come from .env; in GitHub Actions they are injected from repo secrets.
-    # Not GITHUB_TOKEN: Actions reserves that name for its own bot token, which can't read your profile.
+    # Not GITHUB_TOKEN: Actions reserves that name for its bot token, which can't read your profile
     load_dotenv()
     token = os.environ.get("GH_STATS_TOKEN")
     if not token:

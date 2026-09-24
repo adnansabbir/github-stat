@@ -24,8 +24,8 @@ That's it. After a few minutes:
 | JSON endpoint  | `https://<your-username>.github.io/github-stat/stats.json` |
 | Card image     | `https://<your-username>.github.io/github-stat/card.png`   |
 
-The card page has buttons to share it on LinkedIn or Facebook, copy the link, or download the
-image. Everything refreshes automatically every Sunday.
+The card page has buttons to open your GitHub profile, share the card on LinkedIn or Facebook,
+copy the link, or download the image. Everything refreshes automatically every Sunday.
 
 ---
 

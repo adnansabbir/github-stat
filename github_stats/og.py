@@ -1,13 +1,7 @@
-"""Add the social preview to a built site: `SITE_URL=<site url> python -m github_stats.og site`.
+"""Render card.png and write link preview tags: `SITE_URL=<site url> python -m github_stats.og site`.
 
-LinkedIn and Facebook build link previews from og: meta tags without running JavaScript, so the
-card is rendered to a static card.png and the tags are written into index.html with absolute URLs.
-
-Exit codes:
-  0  preview written, or skipped because the rendering tools failed (text-only tags are written,
-     so the fresh stats.json and page still deploy)
-  1  the card itself is broken (profile or avatar failed): nothing is written and the workflow
-     stops, so the last good site stays live
+Exit 0: preview written, or skipped with text-only tags if the rendering tools failed.
+Exit 1: the card itself is broken; nothing is written, so the workflow keeps the last good site.
 """
 
 import functools
@@ -20,13 +14,13 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-# The size LinkedIn and Facebook recommend; 1x keeps the PNG under WhatsApp's 600 KB preview limit
+# 1x keeps the PNG under WhatsApp's 600 KB preview limit
 WIDTH, HEIGHT = 1200, 630
 META_START, META_END = "<!--og-meta-->", "<!--/og-meta-->"
 
 
 class CardError(Exception):
-    """The card rendered wrong; publishing it would be worse than keeping last week's site."""
+    pass
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
@@ -35,8 +29,6 @@ class QuietHandler(SimpleHTTPRequestHandler):
 
 
 def site_url():
-    """Public URL of the Pages site. The workflow passes the one from actions/configure-pages,
-    which knows custom domains."""
     url = os.environ.get("SITE_URL")
     if not url:
         raise SystemExit("Set SITE_URL, e.g. SITE_URL=http://localhost:8000 python -m github_stats.og site")
@@ -44,7 +36,7 @@ def site_url():
 
 
 def _version(stats):
-    # Changes whenever the stats do, so a platform that re-scrapes the page fetches the new image
+    # Cache buster for og:image
     try:
         generated_at = datetime.fromisoformat(stats["generated_at"])
     except (KeyError, TypeError, ValueError):
@@ -53,13 +45,12 @@ def _version(stats):
 
 
 def _warn(message):
-    # Shown as an annotation on the workflow run; a plain line when run locally
+    # GitHub Actions annotation syntax
     print(f"::warning::{message}", file=sys.stderr)
 
 
 def render_card(site):
-    """Screenshot the card to site/card.png and return the page's title and description, which
-    app.js writes from what it actually rendered."""
+    """Returns the title and description app.js wrote from what it rendered."""
     from playwright.sync_api import sync_playwright
 
     handler = functools.partial(QuietHandler, directory=str(site))
@@ -69,22 +60,21 @@ def render_card(site):
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={"width": WIDTH, "height": HEIGHT})
-            # app.js hides a section with a console warning when its data is bad; surface those
+            # app.js logs "Hiding …" when it hides a section with bad data
             hidden = []
             page.on("console", lambda msg: msg.type == "warning" and msg.text.startswith("Hiding")
                     and hidden.append(msg.text.splitlines()[0]))
 
-            # One retry, since a failed avatar is usually a passing hiccup of GitHub's avatar server
+            # Retried once: avatar failures are usually transient
             for attempt in (1, 2):
                 hidden.clear()
                 page.goto(f"http://127.0.0.1:{server.server_port}/?og")
-                # Done once app.js has finished and the avatar has settled, or the card shows an error
                 page.wait_for_function(
                     "document.getElementById('card').getAttribute('aria-busy') === 'false'"
                     " && (document.getElementById('card').dataset.avatar"
                     " || document.querySelector('#bio.error'))"
                 )
-                # app.js also finishes loading when rendering fails; never publish the error card
+                # app.js also finishes when rendering fails
                 if page.locator("#bio.error").count():
                     raise CardError(f"Card failed to render: {page.locator('#bio').inner_text()}")
                 if page.locator("#card[data-avatar=loaded]").count():
@@ -135,7 +125,7 @@ def main():
     stats = json.loads((site / "stats.json").read_text())
     index = site / "index.html"
     page = index.read_text()
-    # Checked before rendering: index.html is only rewritten once, after a successful render
+    # Checked up front because index.html is only rewritten after a successful render
     if META_START not in page or META_END not in page:
         raise SystemExit(f"{index} has no {META_START}…{META_END} block; copy web/ into {site}/ again first")
 

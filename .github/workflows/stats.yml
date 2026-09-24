@@ -4,13 +4,11 @@ on:
   schedule:
     # Every Sunday at 00:00 UTC
     - cron: "0 0 * * 0"
-  # Allows running it by hand from the Actions tab
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# Never run two deployments at once; let an in-progress one finish
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -20,12 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      # Lets configure-pages read the site's address from the Pages settings
       pages: read
     steps:
       - uses: actions/checkout@v7
 
-      # Gives the real site URL, including a custom domain if the fork has one
+      # Gives the real site URL, including a custom domain
       - id: pages
         uses: actions/configure-pages@v6
 
@@ -39,24 +36,19 @@ jobs:
       - name: Build site
         env:
           GH_STATS_TOKEN: ${{ secrets.GH_STATS_TOKEN }}
-          # Repository variable; unset means public repos only
           INCLUDE_PRIVATE_REPO: ${{ vars.INCLUDE_PRIVATE_REPO || 'false' }}
         run: |
           mkdir -p site
           cp -r web/. site/
           python -m github_stats > site/stats.json
 
-      # LinkedIn / Facebook previews don't run JavaScript: render the card to card.png and
-      # write og: tags with absolute URLs into index.html.
-      # If the tools fail to install or run, og.py still writes text-only tags and exits 0, so the
-      # fresh stats.json deploys anyway; only a broken card (profile or avatar) fails this step.
+      # Install failures only warn: og.py then writes text-only tags, so stats.json still deploys
       - name: Render social preview
         env:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
           pip install -r requirements-og.txt || echo "::warning::Could not install Playwright"
-          # --with-deps also installs the CJK, Thai and Indic fonts the runner lacks; without
-          # them, names and bios in those scripts render as empty boxes
+          # --with-deps installs the CJK, Thai and Indic fonts the runner lacks
           python -m playwright install --with-deps --only-shell chromium \
             || echo "::warning::Could not install the preview browser"
           python -m github_stats.og site
@@ -65,8 +57,7 @@ jobs:
         with:
           path: site
 
-  # GitHub disables scheduled workflows in public repos after 60 days without commits, and this
-  # workflow never commits. Re-enabling it on every run keeps the weekly schedule alive.
+  # GitHub disables schedules in public repos after 60 days without commits, and this never commits
   keepalive:
     runs-on: ubuntu-latest
     permissions:
@@ -76,7 +67,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/stats.yml/enable"
 
-  # Publishes the site without committing anything to the repo
   deploy:
     needs: build
     runs-on: ubuntu-latest

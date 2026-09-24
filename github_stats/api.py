@@ -6,7 +6,6 @@ import requests
 
 GRAPHQL_URL = "https://api.github.com/graphql"
 TIMEOUT = 30
-# GitHub GraphQL occasionally answers heavy queries with a 502; retry those a few times
 RETRY_DELAYS = (2, 5, 10)
 
 REPO_FIELDS = """
@@ -20,8 +19,7 @@ REPO_FIELDS = """
   }
 """
 
-# Profile, followers, the first page of owned repos and the years with contributions, in one request.
-# $privacy is PUBLIC to count public repos only, or null to count every repo the token can see.
+# $privacy: PUBLIC for public repos only, null for every repo the token can see
 PROFILE_QUERY = f"""
 query($privacy: RepositoryPrivacy) {{
   viewer {{
@@ -48,7 +46,6 @@ query($privacy: RepositoryPrivacy) {{
 }}
 """
 
-# Only used to page through owned repos past the first 100
 REPOS_QUERY = f"""
 query($cursor: String, $privacy: RepositoryPrivacy) {{
   viewer {{
@@ -103,7 +100,6 @@ def _all_repos(token, first_page, privacy):
 
 
 def _languages(repos):
-    """Bytes of code per language across non-fork repos, largest first."""
     sizes = Counter()
     colors = {}
     for repo in repos:
@@ -120,8 +116,7 @@ def _languages(repos):
     ]
 
 
-# Per-repo contribution lists of a contributionsCollection, used to count public work only.
-# GitHub caps each list at 100 repos, so a year spread over more repos is undercounted.
+# GitHub caps each list at 100 repos, so a year spread over more repos is undercounted
 PUBLIC_CONTRIBUTION_FIELDS = """
   commitContributionsByRepository(maxRepositories: 100) { repository { isPrivate } contributions { totalCount } }
   issueContributionsByRepository(maxRepositories: 100) { repository { isPrivate } contributions { totalCount } }
@@ -143,7 +138,7 @@ def _public_contributions(collection):
         for entry in collection[key]
         if not entry["repository"]["isPrivate"]
     )
-    # Creating a public repo counts as one contribution
+    # Each repo created counts as one contribution
     total += sum(not node["repository"]["isPrivate"] for node in collection["repositoryContributions"]["nodes"])
     return total
 
@@ -151,9 +146,8 @@ def _public_contributions(collection):
 def _yearly_contributions(token, years, include_private):
     if not years:
         return {}
-    # The calendar total includes private work, so without private repos count per repo instead
+    # The calendar total always includes private work, so public-only counts are summed per repo
     selection = "contributionCalendar { totalContributions }" if include_private else PUBLIC_CONTRIBUTION_FIELDS
-    # One aliased contributionsCollection per year, all in a single request
     fields = "\n".join(
         f'y{year}: contributionsCollection(from: "{year}-01-01T00:00:00Z", to: "{year}-12-31T23:59:59Z") '
         f"{{ {selection} }}"
@@ -166,10 +160,7 @@ def _yearly_contributions(token, years, include_private):
 
 
 def fetch_profile_stats(token, include_private=False):
-    """Return profile, followers, repos, stars, languages and yearly contributions of the token's user.
-
-    Private repos only feed the aggregate counts; nothing identifying them is returned.
-    """
+    """Private repos only feed the totals; nothing identifying them is returned."""
     privacy = None if include_private else "PUBLIC"
     viewer = _graphql(token, PROFILE_QUERY, {"privacy": privacy})["viewer"]
     repos = _all_repos(token, viewer["repositories"], privacy)

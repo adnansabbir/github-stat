@@ -1,5 +1,4 @@
-// Renders the stats card from ./stats.json. Data is set with textContent only, since profile
-// fields such as the bio are user-written.
+// Profile fields are user-written: set them with textContent only, never innerHTML
 
 const TOP_LANGUAGES = 5;
 const FALLBACK_LANGUAGE_COLOR = "#8b949e";
@@ -16,7 +15,7 @@ function el(tag, props = {}, children = []) {
   return node;
 }
 
-// GitHub stores the website as typed, possibly without a scheme; only link http(s) URLs
+// GitHub stores the website as typed, possibly without a scheme
 function safeWebsite(value) {
   if (!value) return null;
   try {
@@ -31,7 +30,7 @@ function initials(name) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
 }
 
-// A Date from stats.json's generated_at, or null; new Date(null) would be 1 January 1970
+// Only strings: new Date(null) would be 1 January 1970
 function generatedAt(stats) {
   const date = typeof stats.generated_at === "string" ? new Date(stats.generated_at) : null;
   return date && !Number.isNaN(date.getTime()) ? date : null;
@@ -42,7 +41,7 @@ function renderProfile(profile) {
   const displayName = profile.name || login;
 
   document.title = `${displayName} · GitHub Stats`;
-  // data-avatar tells the preview renderer (og.py) the avatar settled, and whether it loaded
+  // og.py waits for data-avatar before taking the screenshot
   $("avatar").addEventListener("load", () => { $("card").dataset.avatar = "loaded"; }, { once: true });
   $("avatar").addEventListener("error", () => {
     $("card").dataset.avatar = "failed";
@@ -53,6 +52,11 @@ function renderProfile(profile) {
   $("name").textContent = displayName;
   $("login").textContent = `@${login}`;
   $("login").href = profile.url;
+  if (/^https?:$/.test(new URL(profile.url).protocol)) {
+    $("profile-link").href = profile.url;
+    $("profile-link").textContent = `View @${login} on GitHub`;
+    $("profile-link").hidden = false;
+  }
   $("bio").textContent = profile.bio || "";
 
   const meta = [];
@@ -66,14 +70,13 @@ function renderProfile(profile) {
   $("meta").replaceChildren(...meta);
 }
 
-// The year the stats were fetched in, which is the one still in progress
 function currentYear(stats) {
   const date = generatedAt(stats);
   if (date) return String(date.getUTCFullYear());
   return Object.keys(stats.yearly_contributions ?? {}).sort().at(-1);
 }
 
-// Renders one part of the card; if its data is missing or malformed, hides just that part
+// Bad data hides only that part of the card
 function section(element, render) {
   try {
     render();
@@ -83,13 +86,11 @@ function section(element, render) {
   }
 }
 
-// A count from stats.json; anything else means the data is missing or malformed
 function count(value) {
   if (!Number.isFinite(value)) throw new Error("not a number");
   return numberFormat.format(value);
 }
 
-// Each tile is independent, so one bad value only hides its own tile
 function renderTotals(stats, year) {
   section($("stat-contributions").closest(".tile"), () => {
     if (!year) throw new Error("no contribution years");
@@ -98,7 +99,7 @@ function renderTotals(stats, year) {
   });
   section($("stat-repos").closest(".tile"), () => {
     $("stat-repos").textContent = count(stats.repos.sources);
-    // Older stats.json files have no include_private; they were public-only by default
+    // Older stats.json files have no include_private and were public-only
     $("stat-repos-label").textContent = stats.include_private ? "Repos" : "Public Repos";
   });
   section($("stat-stars").closest(".tile"), () => {
@@ -139,12 +140,10 @@ function renderYears(yearly, current) {
   if (!yearly || typeof yearly !== "object" || Array.isArray(yearly)) throw new Error("not a year map");
   const years = Object.entries(yearly).sort(([a], [b]) => a - b);
   if (!years.length) throw new Error("no contribution years");
-  // count() throws on any non-number, which hides the whole panel rather than drawing NaN bars
   const labels = years.map(([, n]) => count(n));
   const max = Math.max(1, ...years.map(([, n]) => n));
 
   $("years").replaceChildren(...years.map(([year, n], i) => {
-    // The count sits on the bar, so the bar's height is a share of the track alone, not the labels
     const bar = el("div", { className: "year-bar", title: `${n} contributions in ${year}` }, [
       el("span", { className: "year-count", textContent: labels[i] }),
     ]);
@@ -158,7 +157,7 @@ function renderYears(yearly, current) {
   }));
 }
 
-// The page description, built from what the card shows; og.py copies it into the preview tags
+// og.py copies this into the link preview tags
 function describe() {
   const parts = [...document.querySelectorAll("#tiles:not([hidden]) .tile:not([hidden])")].map((tile) => {
     const value = tile.querySelector(".tile-value").textContent;
@@ -175,7 +174,6 @@ function describe() {
   document.querySelector('meta[name="description"]').content = description;
 }
 
-// Offers card.png (the social preview image) as a download named after the user
 async function setUpDownload(profile) {
   try {
     const response = await fetch("card.png", { method: "HEAD", cache: "no-cache" });
@@ -184,7 +182,7 @@ async function setUpDownload(profile) {
     $("download-card").download = `${login}-github-stats.png`;
     $("download-card").hidden = false;
   } catch {
-    // No image this week; the button stays hidden
+    // No card.png this week
   }
 }
 
@@ -204,7 +202,7 @@ function setUpSharing() {
 }
 
 async function main() {
-  // ?og lays the card out at 1200x630 for the social preview screenshot
+  // ?og is the 1200x630 layout og.py screenshots
   if (new URLSearchParams(location.search).has("og")) document.body.classList.add("og");
   setUpSharing();
   try {
@@ -212,7 +210,7 @@ async function main() {
     if (!response.ok) throw new Error(`stats.json returned ${response.status}`);
     const stats = await response.json();
 
-    // Without a profile there is no card to show, so this one is not optional
+    // Outside section(): without a profile there is no card
     renderProfile(stats.profile);
     setUpDownload(stats.profile);
 

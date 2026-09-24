@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- `python -m github_stats.og` replaces this block with the card's title, description and
-       social preview tags (og:image etc.) -->
+  <!-- Replaced by github_stats/og.py with the card's title, description and og: tags -->
   <!--og-meta-->
   <title>GitHub Stats</title>
   <meta name="description" content="GitHub profile stats: repos, stars, languages and yearly contributions.">
@@ -60,10 +59,10 @@
     </article>
 
     <nav class="actions" aria-label="Share">
+      <a class="button button-primary" id="profile-link" target="_blank" rel="noopener" hidden>View on GitHub</a>
       <a class="button" id="share-linkedin" target="_blank" rel="noopener">Share on LinkedIn</a>
       <a class="button" id="share-facebook" target="_blank" rel="noopener">Share on Facebook</a>
       <button class="button" id="copy-link" type="button">Copy link</button>
-      <!-- Shown by app.js only when card.png exists (it is skipped in weeks the preview can't render) -->
       <a class="button" id="download-card" href="card.png" download="github-stats.png" hidden>Download image</a>
       <a class="button button-quiet" href="stats.json">stats.json</a>
     </nav>
