@@ -471,21 +471,19 @@ body.og .credit { display: none; }
 
 body.og .card {
   height: 100%;
-  padding: 26px 30px 22px;
-  gap: 18px;
+  padding: 30px 34px;
+  gap: 22px;
   grid-template-columns: 1fr 1.25fr;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto 1fr;
   grid-template-areas:
     "header header"
     "tiles tiles"
-    "languages years"
-    "footer footer";
+    "languages years";
 }
 
 body.og .card-header { grid-area: header; }
 body.og .tiles { grid-area: tiles; }
 body.og .panel-languages { grid-area: languages; }
-body.og .card-footer { grid-area: footer; }
 
 body.og .panel-years {
   grid-area: years;
@@ -499,10 +497,33 @@ body.og .years {
   min-height: 0;
 }
 
-body.og .identity h1 { font-size: 32px; }
-body.og .bio { -webkit-line-clamp: 1; }
-body.og .tile { padding: 14px 18px 12px; }
-body.og .tile-value { font-size: 30px; }
+/* LinkedIn and Facebook show the image at about 500px wide, so everything must stay readable at
+   ~40%: big type only, and details that would shrink to a few pixels are left out */
+body.og .card-footer,
+body.og .bio,
+body.og .meta,
+body.og .year-count,
+body.og .ytd,
+body.og .lang-legend .pct,
+body.og .lang-legend li:nth-child(n + 4) { display: none; }
+
+body.og .card-header { gap: 26px; }
+body.og .avatar { width: 116px; height: 116px; }
+body.og .avatar-initials { font-size: 44px; }
+body.og .identity h1 { font-size: 60px; }
+body.og .login { font-size: 30px; margin-top: 6px; }
+
+body.og .tile { padding: 16px 22px; gap: 8px; }
+body.og .tile-value { font-size: 58px; }
+body.og .tile-label { font-size: 17px; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+body.og .panel { padding: 20px 24px; }
+body.og .panel h2 { font-size: 19px; margin-bottom: 16px; }
+body.og .lang-bar { height: 22px; }
+body.og .lang-legend { margin-top: 20px; gap: 12px 26px; font-size: 25px; }
+body.og .lang-legend .dot { width: 18px; height: 18px; }
+body.og .year-track { padding-top: 0; }
+body.og .year-label { font-size: 18px; }
 
 /* If one panel is hidden, the other takes the full width instead of leaving a hole */
 body.og .card:has(#panel-languages[hidden]) .panel-years,

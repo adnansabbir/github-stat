@@ -1,75 +1,66 @@
 # github-stats
 
-Your GitHub profile stats (repos, stars, languages, yearly contributions), refreshed every week
-by GitHub Actions and published as a JSON endpoint on GitHub Pages that you can reuse anywhere.
+A shareable card and a JSON endpoint with your GitHub stats, refreshed every week for free by
+GitHub Actions and GitHub Pages.
 
-## Get your own stats
+![Example card](https://adnansabbir.github.io/github-stat/card.png)
 
-Everything runs in your own fork, with your own token, on your own GitHub account. No server, no
-install, nothing to run locally.
+## Quick start
 
-### 1. Fork this repo
+1. **Fork** this repo (a ⭐ is much appreciated!). Continue from your fork's README.
+2. **Create a token:** open [Generate new token](https://github.com/settings/personal-access-tokens/new),
+   give it any name, keep **Public repositories**, click **Generate token** and copy it.
+3. **Add it to your fork:** **Settings → Secrets and variables → Actions → New repository secret**,
+   name `GH_STATS_TOKEN`, paste the token.
+4. **Turn on Pages:** **Settings → Pages → Source: GitHub Actions**.
+5. **Run it:** open the **Actions** tab, click **I understand my workflows, go ahead and enable
+   them**, then **Fetch GitHub stats → Run workflow**.
 
-Click **Fork** at the top of this page. (If you find it useful, a ⭐ is much appreciated!)
+That's it. After a few minutes:
 
-From here on, you can keep following this README from your fork.
+| What           | Where                                                      |
+|----------------|------------------------------------------------------------|
+| Your card      | `https://<your-username>.github.io/github-stat/`           |
+| JSON endpoint  | `https://<your-username>.github.io/github-stat/stats.json` |
+| Card image     | `https://<your-username>.github.io/github-stat/card.png`   |
 
-### 2. Create a GitHub token
+The card page has buttons to share it on LinkedIn or Facebook, copy the link, or download the
+image. Everything refreshes automatically every Sunday.
 
-The workflow needs a token to read your profile. It is created in your account, stored only in
-your fork's secrets, and never leaves your repository.
+---
 
-1. Open [Settings → Developer settings → Fine-grained tokens → Generate new token](https://github.com/settings/personal-access-tokens/new).
-2. **Token name:** anything, e.g. `github-stats`.
-3. **Expiration:** your choice. When it expires, create a new one and replace the secret (step 3).
-4. **Repository access:**
-   - **Public repositories** for public stats only (enough for most people), or
-   - **All repositories** if you also want private repos counted (see step 4). Then under
-     **Permissions → Repository permissions**, set **Contents** to **Read-only**.
-5. Click **Generate token** and copy it. GitHub shows it only once.
+## More details
 
-The token is read-only: it can read your profile and repos, but cannot change anything.
+### Include private repos
 
-### 3. Add the token to your fork
+By default only public repos and public contributions are counted. To include private ones:
 
-In your fork, go to **Settings → Secrets and variables → Actions → New repository secret**:
+1. When creating the token, choose **All repositories**, and under **Permissions → Repository
+   permissions** set **Contents** to **Read-only**.
+2. In your fork, go to **Settings → Secrets and variables → Actions → Variables → New repository
+   variable**, name `INCLUDE_PRIVATE_REPO`, value `true`.
 
-- **Name:** `GH_STATS_TOKEN`
-- **Secret:** the token you just copied
-
-### 4. (Optional) Include private repos
-
-By default only public repos and public contributions are counted. To include private ones, in
-the same page open the **Variables** tab → **New repository variable**:
-
-- **Name:** `INCLUDE_PRIVATE_REPO`
-- **Value:** `true`
-
-Private repos only add to the totals, which are published on your public page and `stats.json`.
+Private repos only add to the totals, which are shown on your public card and in `stats.json`.
 Their names are never published.
 
-### 5. Turn on GitHub Pages
+### About the token
 
-In your fork, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+- It is created in your account and stored only in your fork's secrets. It is read-only: it can
+  read your profile and repos, but cannot change anything.
+- When it expires, create a new one and replace the `GH_STATS_TOKEN` secret.
+- It is not named `GITHUB_TOKEN` because GitHub Actions reserves that name for its own bot token,
+  which cannot read your profile.
 
-### 6. Enable the workflow and run it
+### How updates work
 
-GitHub disables workflows in forks until you allow them:
+- The workflow runs every Sunday at 00:00 UTC, and whenever you click **Run workflow**.
+- Nothing is committed to your repo: each run publishes a fresh copy of the site to GitHub Pages.
+- If a run fails, the previous week's site stays live, and GitHub emails you.
+- If only the card image can't be rendered, the stats and card are still published, with a
+  text-only link preview and no download button; the run shows a warning.
+- If you rename your fork, replace `github-stat` in the URLs with the new name.
 
-1. Open the **Actions** tab and click **I understand my workflows, go ahead and enable them**.
-2. Select **Fetch GitHub stats** → **Run workflow**.
-
-After a few minutes (the first run also installs the browser that renders the preview image), your
-stats are live at:
-
-| What              | URL                                                        |
-|-------------------|------------------------------------------------------------|
-| Shareable card    | `https://<your-username>.github.io/github-stat/`           |
-| JSON endpoint     | `https://<your-username>.github.io/github-stat/stats.json` |
-| Preview image     | `https://<your-username>.github.io/github-stat/card.png`   |
-
-They refresh automatically every Sunday at 00:00 UTC. You can also refresh them any time with
-**Run workflow**. Nothing is committed to your repo: each run publishes a fresh copy of the site.
+### Link previews
 
 Sharing the card link on LinkedIn, Facebook or X shows `card.png` as the preview. These sites keep
 their own copy of a preview (LinkedIn and X for about a week, Facebook for up to 30 days), so a
@@ -77,12 +68,7 @@ shared link can show older stats. To refresh it right away, paste the link into 
 [Post Inspector](https://www.linkedin.com/post-inspector/) or Facebook's
 [Sharing Debugger](https://developers.facebook.com/tools/debug/) (click **Scrape Again**).
 
-If a week's preview image can't be rendered, the stats and card are still published, with a
-text-only preview; the run shows a warning.
-
-If you rename your fork, replace `github-stat` in the URLs with the new name.
-
-## What's in the JSON
+### What's in the JSON
 
 | Section                | What it contains                                                   |
 |------------------------|--------------------------------------------------------------------|
@@ -101,17 +87,14 @@ Without private repos, yearly contributions count commits, issues, pull requests
 created repos in public repos. GitHub lists at most 100 repos per contribution type per year, so a
 year spread over more repos is slightly undercounted.
 
-## Configuration
+### Configuration
 
-| Name                   | Where                        | Required | Default | Description                                            |
-|------------------------|------------------------------|----------|---------|--------------------------------------------------------|
-| `GH_STATS_TOKEN`       | Actions secret / `.env`      | yes      |         | Your fine-grained personal access token                |
-| `INCLUDE_PRIVATE_REPO` | Actions variable / `.env`    | no       | `false` | `true` to count private repos and private contributions |
+| Name                   | Where                     | Required | Default | Description                                             |
+|------------------------|---------------------------|----------|---------|---------------------------------------------------------|
+| `GH_STATS_TOKEN`       | Actions secret / `.env`   | yes      |         | Your fine-grained personal access token                 |
+| `INCLUDE_PRIVATE_REPO` | Actions variable / `.env` | no       | `false` | `true` to count private repos and private contributions |
 
-The token is not named `GITHUB_TOKEN` because GitHub Actions reserves that name for its own bot
-token, which cannot read your profile.
-
-## Run locally (optional)
+### Run locally
 
 Only needed if you want to change the code.
 
@@ -134,7 +117,7 @@ python -m http.server -d site 8000         # open http://localhost:8000
 
 After editing `web/`, run `cp -r web/. site/` again and refresh.
 
-To also render the preview image and meta tags (`site/card.png`):
+To also render the card image and link preview tags (`site/card.png`):
 
 ```sh
 pip install -r requirements-og.txt                   # once

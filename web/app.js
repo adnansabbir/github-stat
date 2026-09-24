@@ -175,6 +175,19 @@ function describe() {
   document.querySelector('meta[name="description"]').content = description;
 }
 
+// Offers card.png (the social preview image) as a download named after the user
+async function setUpDownload(profile) {
+  try {
+    const response = await fetch("card.png", { method: "HEAD", cache: "no-cache" });
+    if (!response.ok) return;
+    const login = new URL(profile.url).pathname.split("/").filter(Boolean).pop();
+    $("download-card").download = `${login}-github-stats.png`;
+    $("download-card").hidden = false;
+  } catch {
+    // No image this week; the button stays hidden
+  }
+}
+
 function setUpSharing() {
   const url = encodeURIComponent(location.href);
   $("share-linkedin").href = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
@@ -201,6 +214,7 @@ async function main() {
 
     // Without a profile there is no card to show, so this one is not optional
     renderProfile(stats.profile);
+    setUpDownload(stats.profile);
 
     const year = currentYear(stats);
     renderTotals(stats, year);
