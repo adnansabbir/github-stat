@@ -392,8 +392,14 @@ a:hover { text-decoration: underline; }
 .credit {
   text-align: center;
   color: var(--page-muted);
-  font-size: 13px;
-  margin-top: 20px;
+  font-size: 14px;
+  margin-top: 28px;
+}
+
+.credit-cta {
+  display: inline-block;
+  margin-left: 6px;
+  font-weight: 600;
 }
 
 .error { color: var(--danger); }

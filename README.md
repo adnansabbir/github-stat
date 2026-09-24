@@ -1,35 +1,63 @@
-# github-stats
+# GitHub Stats
 
-A shareable card and a JSON endpoint with your GitHub stats, refreshed every week for free by
-GitHub Actions and GitHub Pages.
+**Turn your GitHub history into a shareable developer stats page**, updated automatically every
+week and hosted free on GitHub Pages.
 
-![Example card](https://adnansabbir.github.io/github-stat/card.png)
+No server · No database · No coding required · Runs entirely in your own GitHub account
 
-## Quick start
+[![Your GitHub career, in one card](https://adnansabbir.github.io/github-stat/card.png)](https://adnansabbir.github.io/github-stat/)
 
-1. **Fork** this repo (a ⭐ is much appreciated!). Continue from your fork's README.
+Contributions for every year since you joined · top languages · stars · repositories · followers
+
+**[See live example](https://adnansabbir.github.io/github-stat/)** · **[🍴 Create my GitHub Stats](https://github.com/adnansabbir/github-stat/fork)**
+
+Free to use. Your token stays in your fork's GitHub Actions secrets and only needs read access.
+
+## Create your own
+
+```
+Fork  →  Add token  →  Enable Pages  →  Run  →  🎉 your-username.github.io/github-stat
+```
+
+**No files to edit.** Your fork automatically uses your own GitHub account, so there's no username
+to change anywhere.
+
+1. **Fork this repo:** [github.com/adnansabbir/github-stat/fork](https://github.com/adnansabbir/github-stat/fork).
+   Continue from your fork's README.
 2. **Create a token:** open [Generate new token](https://github.com/settings/personal-access-tokens/new),
-   give it any name, keep **Public repositories**, click **Generate token** and copy it.
+   give it any name, set a long **Expiration** (e.g. 1 year; the default is only 30 days), keep
+   **Public repositories**, click **Generate token** and copy it.
 3. **Add it to your fork:** **Settings → Secrets and variables → Actions → New repository secret**,
    name `GH_STATS_TOKEN`, paste the token.
 4. **Turn on Pages:** **Settings → Pages → Source: GitHub Actions**.
 5. **Run it:** open the **Actions** tab, click **I understand my workflows, go ahead and enable
    them**, then **Fetch GitHub stats → Run workflow**.
 
-That's it. After a few minutes:
+🎉 A few minutes later, it's live:
 
 | What           | Where                                                      |
 |----------------|------------------------------------------------------------|
-| Your card      | `https://<your-username>.github.io/github-stat/`           |
-| JSON endpoint  | `https://<your-username>.github.io/github-stat/stats.json` |
+| Your page      | `https://<your-username>.github.io/github-stat/`           |
 | Card image     | `https://<your-username>.github.io/github-stat/card.png`   |
+| JSON endpoint  | `https://<your-username>.github.io/github-stat/stats.json` |
 
-The card page has buttons to open your GitHub profile, share the card on LinkedIn or Facebook,
-copy the link, or download the image. Everything refreshes automatically every Sunday.
+From then on it refreshes itself every Sunday. If you find it useful, consider starring the repo ⭐
+
+## Your page includes
+
+- ✅ Your own public stats page at `https://<your-username>.github.io/github-stat/`
+- ✅ A 1200×630 card image that shows up when you share the link on LinkedIn, Facebook or X
+- ✅ Buttons on the page to share it, copy the link, download the image or open your GitHub profile
+- ✅ A `stats.json` endpoint you can use on your own website
+- ✅ Automatic weekly updates, with nothing to maintain
+- ✅ Optionally, totals that include your private repos (their names are never shown)
+
+Use it on LinkedIn, in your portfolio, in a README or blog post (`card.png`), or on your own site
+(`stats.json`).
 
 ---
 
-## More details
+## Options
 
 ### Include private repos
 
@@ -40,33 +68,37 @@ By default only public repos and public contributions are counted. To include pr
 2. In your fork, go to **Settings → Secrets and variables → Actions → Variables → New repository
    variable**, name `INCLUDE_PRIVATE_REPO`, value `true`.
 
-Private repos only add to the totals, which are shown on your public card and in `stats.json`.
+Private repos only add to the totals, which are shown on your public page and in `stats.json`.
 Their names are never published.
 
 ### About the token
 
 - It is created in your account and stored only in your fork's secrets. It is read-only: it can
   read your profile and repos, but cannot change anything.
-- When it expires, create a new one and replace the `GH_STATS_TOKEN` secret.
+- GitHub emails you a few days before it expires. Create a new one and replace the
+  `GH_STATS_TOKEN` secret, or the weekly updates stop (the last page stays live).
 - It is not named `GITHUB_TOKEN` because GitHub Actions reserves that name for its own bot token,
   which cannot read your profile.
 
-### How updates work
+### Updates
 
 - The workflow runs every Sunday at 00:00 UTC, and whenever you click **Run workflow**.
 - Nothing is committed to your repo: each run publishes a fresh copy of the site to GitHub Pages.
-- If a run fails, the previous week's site stays live, and GitHub emails you.
-- If only the card image can't be rendered, the stats and card are still published, with a
+- If a run fails, the previous week's page stays live, and GitHub emails you.
+- If only the card image can't be rendered, the stats and page are still published, with a
   text-only link preview and no download button; the run shows a warning.
 - If you rename your fork, replace `github-stat` in the URLs with the new name.
 
 ### Link previews
 
-Sharing the card link on LinkedIn, Facebook or X shows `card.png` as the preview. These sites keep
-their own copy of a preview (LinkedIn and X for about a week, Facebook for up to 30 days), so a
-shared link can show older stats. To refresh it right away, paste the link into LinkedIn's
-[Post Inspector](https://www.linkedin.com/post-inspector/) or Facebook's
-[Sharing Debugger](https://developers.facebook.com/tools/debug/) (click **Scrape Again**).
+LinkedIn, Facebook and X keep their own copy of a link preview (LinkedIn and X for about a week,
+Facebook for up to 30 days), so a shared link can show older stats. To refresh it right away,
+paste the link into LinkedIn's [Post Inspector](https://www.linkedin.com/post-inspector/) or
+Facebook's [Sharing Debugger](https://developers.facebook.com/tools/debug/) (click **Scrape Again**).
+
+---
+
+## Developer documentation
 
 ### What's in the JSON
 
@@ -106,7 +138,7 @@ cp .env.example .env   # then fill in GH_STATS_TOKEN
 python -m github_stats # prints the stats as JSON
 ```
 
-To preview the card, build the site the same way the workflow does and serve it:
+To preview the page, build the site the same way the workflow does and serve it:
 
 ```sh
 mkdir -p site && cp -r web/. site/
@@ -131,5 +163,5 @@ run `python -m playwright install --with-deps --only-shell chromium` instead (ne
 
 Open `http://localhost:8000/?og` to see the 1200×630 layout used for the image.
 
-The card lives in `web/` (`index.html`, `style.css`, `app.js`); `site/` is build output and is
+The page lives in `web/` (`index.html`, `style.css`, `app.js`); `site/` is build output and is
 not committed.
